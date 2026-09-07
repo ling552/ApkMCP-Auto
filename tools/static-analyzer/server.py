@@ -13,7 +13,11 @@ from pathlib import Path
 from typing import Dict, List, Any, Optional, Tuple
 from dataclasses import dataclass, field, asdict
 
-from mcp.server.fastmcp import FastMCP
+try:
+    # 优先使用新版 fastmcp 包（与统一单服务器一致）
+    from fastmcp import FastMCP
+except ImportError:  # 兼容旧版 mcp SDK 独立运行
+    from mcp.server.fastmcp import FastMCP
 
 # 初始化 MCP Server
 mcp = FastMCP("static-analyzer")

@@ -1,0 +1,12 @@
+# ApkMCP 统一单服务器核心依赖
+# 安装命令：pip install -r requirements.txt
+# Python 版本要求：>= 3.10
+
+# MCP 协议框架（统一服务器聚合必需）
+fastmcp>=3.0.2
+
+# 旧版 MCP SDK（static-analyzer / diff 分组使用 mcp.server.fastmcp）
+mcp>=1.0.0
+
+# HTTP 客户端（统一服务器状态检查等使用）
+httpx>=0.28.1

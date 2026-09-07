@@ -2,9 +2,12 @@
 chcp 65001 >nul
 title MCP Server 启动管理器
 
-REM Android 逆向工程 MCP 工具套件启动脚本
-REM 支持启动所有或指定 MCP 服务器
+REM Android 逆向工程 MCP 工具套件启动脚本（旧版 7 服务器分散模式，已弃用）
+REM 新版推荐统一单服务器：start-server.bat，或 python server.py
+REM 本文件仅为兼容旧版保留。
 REM 所有路径使用相对路径，确保项目可移植
+
+echo [注意] 本脚本为旧版分散模式（已弃用），推荐改用统一单服务器 start-server.bat
 
 echo ================================================================================
 echo Android 逆向工程 MCP 工具套件

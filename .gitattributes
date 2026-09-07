@@ -1,0 +1,22 @@
+# 默认文本文件自动换行处理
+* text=auto eol=lf
+
+# Windows 批处理保持 CRLF
+*.bat text eol=crlf
+
+# Python / 文档 / 配置统一 LF
+*.py text eol=lf
+*.md text eol=lf
+*.json text eol=lf
+*.yaml text eol=lf
+*.yml text eol=lf
+*.txt text eol=lf
+*.sh text eol=lf
+
+# 二进制文件说明：本仓库直接提交二进制文件（均小于 GitHub 100MB 单文件上限），
+# 不启用 Git LFS。如未来二进制体积增长，可将下列后缀改回 LFS 并执行 git lfs install。
+# *.jar filter=lfs diff=lfs merge=lfs -text
+# *.exe filter=lfs diff=lfs merge=lfs -text
+# *.zip filter=lfs diff=lfs merge=lfs -text
+# *.dll filter=lfs diff=lfs merge=lfs -text
+# *.so filter=lfs diff=lfs merge=lfs -text

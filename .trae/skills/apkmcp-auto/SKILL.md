@@ -1,6 +1,6 @@
 ---
 name: "apkmcp-auto"
-description: "Android APK 逆向工程自动化工具套件 Skill。整合 JADX、APKTool、ADB、签名工具、静态分析器和文件对比工具。当用户需要进行 APK 反编译、代码分析、设备调试、APK 签名或文件对比时调用此 Skill。"
+description: "Android APK 逆向工程自动化工具套件 Skill。统一单服务器（server.py）聚合 APKTool、ADB、签名工具、静态分析器、文件对比、Frida 六组工具，一个 MCP 连接即可调用。当用户需要进行 APK 反编译、代码分析、设备调试、APK 签名或文件对比时调用此 Skill。"
 ---
 
 # ApkMCP-Auto Android 逆向工程工具套件
@@ -9,49 +9,37 @@ description: "Android APK 逆向工程自动化工具套件 Skill。整合 JADX�
 
 ApkMCP-Auto 是一个基于 **MCP (Model Context Protocol)** 的 Android APK 自动化逆向工程工具套件，通过 AI 助手与专业反编译工具的无缝集成，实现智能化的 APK 分析与修改。
 
+> **架构（单服务器版）**：所有 Python 工具分组聚合在 **一个 MCP 服务器 `server.py`** 中，
+> 客户端只需配置一条 `apkmcp` 记录。工具名统一带分组前缀
+> （`apktool_*` / `adb_*` / `sign_*` / `static_*` / `diff_*` / `frida_*`），
+> 另有 `apkmcp_help`（查清单）、`apkmcp_status`（查健康状态）两个元工具。
+> JADX 实时分析由 Java 版 `tools/jadx/server.jar` 独立提供（可选，需配合 JADX-GUI）。
+
 ## 新目录结构
 
 项目已重新整理为统一的 `tools/` 目录结构，便于 AI 统一调度：
 
 ```
 ApkMCP-Auto/
-├── tools/                          # 统一工具目录
-│   ├── __init__.py                 # 统一调度模块
-│   ├── jadx/                       # JADX 工具
-│   │   ├── server.jar              # JADX MCP Server (Java)
-│   │   ├── server.py               # JADX MCP Server (Python 备选)
-│   │   └── requirements.txt
-│   ├── apktool/                    # APKTool 工具
-│   │   ├── server.py               # APKTool MCP Server
-│   │   └── requirements.txt
-│   ├── adb/                        # ADB 工具
-│   │   ├── server.py               # ADB MCP Server
-│   │   └── requirements.txt
-│   ├── sign-tools/                 # 签名工具
-│   │   ├── server.py               # Sign Tools MCP Server
-│   │   └── requirements.txt
-│   ├── static-analyzer/            # 静态分析器
-│   │   ├── server.py               # Static Analyzer
-│   │   └── requirements.txt
-│   ├── diff/                       # 文件对比工具
-│   │   ├── server.py               # Diff Tool
-│   │   └── requirements.txt
-│   ├── frida/                      # Frida 动态插桩
-│   │   ├── server.py               # Frida MCP Server
-│   │   └── requirements.txt
-│   ├── bin/                        # 二进制工具目录
-│   │   ├── adb.exe                 # ADB 可执行文件
-│   │   ├── apktool.jar             # APKTool JAR
-│   │   ├── apktool.bat             # APKTool 启动脚本
-│   │   ├── jadx-gui.exe            # JADX GUI
-│   │   ├── jre/                    # Java 运行时
-│   │   └── ...
-│   └── workspace/                  # 工作空间
-│       ├── apktool/                # APKTool 工作目录
-│       └── sign-tools/             # 签名工具工作目录
-├── apkmcp.py                       # 统一命令行工具
-├── .trae/
-│   └── config.json                 # MCP 配置（自动生成）
+├── server.py                     # ★ 统一单服务器（唯一 MCP 入口）
+├── apkmcp.py                     # 统一命令行工具
+├── requirements.txt              # 核心依赖（含 fastmcp）
+├── mcp.json                      # 通用客户端配置（自动生成）
+├── mcp-configs/                  # 各客户端配置（自动生成）
+├── .trae/mcp.json                # Trae 配置（自动生成）
+├── .cursor/mcp.json              # Cursor 配置（自动生成）
+├── .vscode/mcp.json              # VS Code 配置（自动生成）
+├── tools/                        # 工具分组实现（由统一服务器加载）
+│   ├── __init__.py               # 统一调度模块（旧版兼容）
+│   ├── jadx/server.jar           # JADX 服务器（Java，可选独立运行）
+│   ├── apktool/server.py         # → 聚合为 apktool_* 工具
+│   ├── adb/server.py             # → 聚合为 adb_* 工具
+│   ├── sign-tools/server.py      # → 聚合为 sign_* 工具
+│   ├── static-analyzer/server.py # → 聚合为 static_* 工具
+│   ├── diff/server.py            # → 聚合为 diff_* 工具
+│   ├── frida/server.py           # → 聚合为 frida_* 工具（可选依赖）
+│   ├── bin/                      # 二进制工具（adb/apktool/jadx-gui/jre）
+│   └── workspace/                # 工作空间（解码产物、密钥库）
 └── README.md
 ```
 
@@ -62,23 +50,26 @@ ApkMCP-Auto/
 使用 `apkmcp.py` 统一命令行工具管理所有工具：
 
 ```bash
-# 查看工具状态
+# 查看统一服务器状态
 python apkmcp.py status
 
-# 列出所有工具
+# 列出全部分组与工具（前缀命名）
 python apkmcp.py list
 
-# 生成 MCP 配置
+# 生成 MCP 配置（默认 Trae；--client all 生成 9 种主流客户端配置）
 python apkmcp.py config
+python apkmcp.py config --client all
 
-# 安装所有依赖
+# 安装核心依赖（frida 可选）
 python apkmcp.py install
+python apkmcp.py install --frida
 
-# 安装指定工具依赖
-python apkmcp.py install apktool
+# 启动统一服务器（stdio/HTTP，Ctrl+C 停止并释放资源）
+python apkmcp.py start
+python apkmcp.py start --http
 
-# 启动指定工具
-python apkmcp.py start apktool
+# 停止残留进程并释放资源
+python apkmcp.py stop
 ```
 
 ### 2. Python API 调用
@@ -125,10 +116,10 @@ tools = list_all_tools()
 
 ## 核心组件
 
-### 1. JADX MCP Server
-- **路径**: `tools/jadx/`
+### 1. JADX 可选服务器（`apkmcp-jadx`，需 `--with-jadx` 启用）
+- **路径**: `tools/jadx/server.jar`（Java，需配合 JADX-GUI）
 - **功能**: 与 JADX-GUI 集成，提供实时反编译分析
-- **主要工具**:
+- **主要工具**（不带前缀）:
   - `fetch_current_class` - 获取当前选中的类
   - `get_class_source` - 获取指定类源代码
   - `search_classes_by_keyword` - 按关键词搜索类
@@ -137,68 +128,68 @@ tools = list_all_tools()
   - `get_xrefs_to_class/method` - 交叉引用分析
   - `debug_get_stack_frames/variables` - 调试器集成
 
-### 2. APKTool MCP Server
-- **路径**: `tools/apktool/`
+### 2. APKTool 分组（`apktool_*`，统一服务器内置）
+- **实现**: `tools/apktool/server.py`（由统一服务器加载，无需单独启动）
 - **功能**: APK 解码/编码与 Smali 修改
 - **主要工具**:
-  - `decode_apk` - 解码 APK 文件
-  - `build_apk` - 从项目构建 APK
-  - `get_smali_file` / `modify_smali_file` - Smali 代码操作
-  - `list_resources` / `modify_resource_file` - 资源管理
-  - `search_in_files` - 文件内容搜索
-  - `analyze_project_structure` - 项目结构分析
+  - `apktool_decode_apk` - 解码 APK 文件
+  - `apktool_build_apk` - 从项目构建 APK
+  - `apktool_get_smali_file` / `apktool_modify_smali_file` - Smali 代码操作
+  - `apktool_list_resources` / `apktool_modify_resource_file` - 资源管理
+  - `apktool_search_in_files` - 文件内容搜索
+  - `apktool_analyze_project_structure` - 项目结构分析
 
-### 3. ADB MCP Server
-- **路径**: `tools/adb/`
+### 3. ADB 分组（`adb_*`，统一服务器内置）
+- **实现**: `tools/adb/server.py`
 - **功能**: Android 设备管理和调试
 - **主要工具**:
-  - `list_devices` / `get_device_info` - 设备管理
-  - `install_apk` / `uninstall_package` - 应用安装/卸载
-  - `get_logcat` / `clear_logcat` - 日志捕获
-  - `execute_shell` - Shell 命令执行
-  - `push_file` / `pull_file` - 文件传输
-  - `screenshot` - 屏幕截图
-  - `start_activity` / `force_stop_package` - 应用控制
+  - `adb_list_devices` / `adb_get_device_info` - 设备管理
+  - `adb_install_apk` / `adb_uninstall_package` - 应用安装/卸载
+  - `adb_get_logcat` / `adb_clear_logcat` - 日志捕获
+  - `adb_execute_shell` - Shell 命令执行
+  - `adb_push_file` / `adb_pull_file` - 文件传输
+  - `adb_screenshot` - 屏幕截图
+  - `adb_start_activity` / `adb_force_stop_package` - 应用控制
 
-### 4. Sign Tools MCP Server
-- **路径**: `tools/sign-tools/`
+### 4. 签名分组（`sign_*`，统一服务器内置）
+- **实现**: `tools/sign-tools/server.py`
 - **功能**: APK 签名和密钥管理
 - **主要工具**:
-  - `generate_keystore` - 生成密钥库
-  - `list_keystores` / `get_keystore_info` - 密钥管理
-  - `sign_apk` - APK 签名（V1/V2/V3）
-  - `verify_signature` - 签名验证
-  - `zipalign_apk` - 对齐优化
+  - `sign_generate_keystore` - 生成密钥库
+  - `sign_list_keystores` / `sign_get_keystore_info` - 密钥管理
+  - `sign_sign_apk` - APK 签名（V1/V2/V3）
+  - `sign_verify_signature` - 签名验证
+  - `sign_zipalign_apk` - 对齐优化
 
-### 5. Static Analyzer
-- **路径**: `tools/static-analyzer/`
+### 5. 静态分析分组（`static_*`，统一服务器内置）
+- **实现**: `tools/static-analyzer/server.py`
 - **功能**: 静态分析增强
 - **主要工具**:
-  - `analyze_permissions` - 权限分析（含危险权限识别）
-  - `extract_strings` - 字符串资源提取
-  - `extract_endpoints` - URL/IP/API 端点提取
-  - `identify_sdks` - 第三方 SDK 识别（广告、统计、社交、支付等）
-  - `full_analysis` - 完整静态分析
+  - `static_analyze_permissions` - 权限分析（含危险权限识别）
+  - `static_extract_strings` - 字符串资源提取
+  - `static_extract_endpoints` - URL/IP/API 端点提取
+  - `static_identify_sdks` - 第三方 SDK 识别（广告、统计、社交、支付等）
+  - `static_full_analysis` - 完整静态分析
 
-### 6. Diff Tool
-- **路径**: `tools/diff/`
+### 6. 对比分组（`diff_*`，统一服务器内置）
+- **实现**: `tools/diff/server.py`
 - **功能**: 文件对比
 - **主要工具**:
-  - `compare_apks` - APK 文件对比
-  - `compare_smali` - Smali 文件行级对比
-  - `compare_resources` - 资源目录对比
-  - `compare_text_files` - 通用文本文件对比
+  - `diff_compare_apks` - APK 文件对比
+  - `diff_compare_smali` - Smali 文件行级对比
+  - `diff_compare_resources` - 资源目录对比
+  - `diff_compare_text_files` - 通用文本文件对比
 
-### 7. Frida MCP Server
-- **路径**: `tools/frida/`
+### 7. Frida 分组（`frida_*`，统一服务器内置，需 `install --frida`）
+- **实现**: `tools/frida/server.py`
 - **功能**: 动态插桩分析
 - **主要工具**:
-  - `list_processes` / `attach_process` / `spawn_process` - 进程管理
-  - `inject_script` - JavaScript 脚本注入
-  - `hook_function` - 函数 Hook
-  - `intercept_network` - 网络请求拦截
-  - `scan_memory` / `read_memory` / `write_memory` - 内存操作
-  - `enumerate_modules` / `enumerate_exports` - 模块枚举
+  - `frida_list_processes` / `frida_attach_process` / `frida_spawn_process` - 进程管理
+  - `frida_inject_script` - JavaScript 脚本注入
+  - `frida_hook_function` - 函数 Hook
+  - `frida_intercept_network` - 网络请求拦截
+  - `frida_scan_memory` / `frida_read_memory` / `frida_write_memory` - 内存操作
+  - `frida_enumerate_modules` / `frida_enumerate_exports` - 模块枚举
 
 ## 典型工作流程
 
@@ -210,13 +201,13 @@ manager = ApkMCPManager()
 
 # 1. 使用 APKTool 解码 APK
 apktool = manager.get_tool(ToolType.APKTOOL)
-# → 调用 decode_apk(apk_path)
+# → 调用 apktool_decode_apk(apk_path)
 
 # 2. 使用 Static Analyzer 进行静态分析
 analyzer = manager.get_tool(ToolType.STATIC_ANALYZER)
-# → 调用 full_analysis(project_dir)
-# → 调用 analyze_permissions(project_dir)
-# → 调用 identify_sdks(project_dir)
+# → 调用 static_full_analysis(project_dir)
+# → 调用 static_analyze_permissions(project_dir)
+# → 调用 static_identify_sdks(project_dir)
 
 # 3. 使用 JADX 分析代码
 jadx = manager.get_tool(ToolType.JADX)
@@ -226,7 +217,7 @@ jadx = manager.get_tool(ToolType.JADX)
 
 # 4. 使用 Diff Tool 对比修改（如有需要）
 diff = manager.get_tool(ToolType.DIFF)
-# → 调用 compare_apks(original_apk, modified_apk)
+# → 调用 diff_compare_apks(original_apk, modified_apk)
 ```
 
 ### APK 修改与重打包流程
@@ -316,68 +307,20 @@ python apkmcp.py config
 ```json
 {
   "mcpServers": {
-    "jadx-mcp-server": {
+    "apkmcp": {
+      "command": "C:/Users/you/miniconda3/python.exe",
+      "args": ["D:/ApkMCP-Auto/server.py"],
       "type": "stdio",
-      "command": "E:/www/ApkMCP-Auto/tools/bin/jre/bin/java.exe",
-      "args": ["-jar", "E:/www/ApkMCP-Auto/tools/jadx/server.jar"],
       "enabled": true,
-      "description": "JADX MCP 服务器 - Java 反编译分析"
-    },
-    "apktool-mcp-server": {
-      "type": "stdio",
-      "command": "python",
-      "args": [
-        "E:/www/ApkMCP-Auto/tools/apktool/server.py",
-        "--workspace", "E:/www/ApkMCP-Auto/tools/workspace/apktool",
-        "--apktool-path", "E:/www/ApkMCP-Auto/tools/bin/apktool.bat"
-      ],
-      "enabled": true,
-      "description": "APKTool MCP 服务器 - APK 解码/编码"
-    },
-    "adb-mcp-server": {
-      "type": "stdio",
-      "command": "python",
-      "args": [
-        "E:/www/ApkMCP-Auto/tools/adb/server.py",
-        "--adb-path", "E:/www/ApkMCP-Auto/tools/bin/adb.exe"
-      ],
-      "enabled": true,
-      "description": "ADB MCP 服务器 - 设备管理和调试"
-    },
-    "sign-tools-mcp-server": {
-      "type": "stdio",
-      "command": "python",
-      "args": [
-        "E:/www/ApkMCP-Auto/tools/sign-tools/server.py",
-        "--workspace", "E:/www/ApkMCP-Auto/tools/workspace/sign-tools"
-      ],
-      "enabled": true,
-      "description": "签名工具 MCP 服务器 - APK 签名和密钥管理"
-    },
-    "static-analyzer": {
-      "type": "stdio",
-      "command": "python",
-      "args": ["E:/www/ApkMCP-Auto/tools/static-analyzer/server.py"],
-      "enabled": true,
-      "description": "静态分析工具 - 权限、字符串、SDK 识别"
-    },
-    "diff-tool": {
-      "type": "stdio",
-      "command": "python",
-      "args": ["E:/www/ApkMCP-Auto/tools/diff/server.py"],
-      "enabled": true,
-      "description": "文件对比工具 - APK、Smali、资源对比"
-    },
-    "frida-mcp-server": {
-      "type": "stdio",
-      "command": "python",
-      "args": ["E:/www/ApkMCP-Auto/tools/frida/server.py"],
-      "enabled": true,
-      "description": "Frida MCP 服务器 - 动态插桩分析"
+      "description": "ApkMCP 统一单服务器：一个连接调用全部逆向工具"
     }
   }
 }
 ```
+
+用 `python apkmcp.py config --client all` 可生成 Trae / Cursor / VS Code / Cline /
+Claude Desktop / Windsurf / Cherry Studio / Continue / 通用共 9 种客户端配置。
+旧版 7 服务器分散配置可用 `config --legacy` 生成（已弃用）。
 
 ## 使用示例
 

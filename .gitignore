@@ -1,0 +1,31 @@
+# Python 运行时
+__pycache__/
+*.py[cod]
+*.pyo
+.venv/
+venv/
+.conda/
+
+# 自动生成的 MCP 客户端配置（含本机绝对路径，换机后重新生成）
+# 生成命令：python apkmcp.py config --client all
+mcp.json
+mcp-configs/
+.trae/mcp.json
+.trae/config.json
+.cursor/mcp.json
+.vscode/mcp.json
+
+# 运行期工作空间与产物（server.py 启动时自动创建目录）
+tools/workspace/
+uploads/
+*.apk
+*报告.md
+*.log
+
+# 本地构建的发布包
+dist/
+
+# 操作系统文件
+.DS_Store
+Thumbs.db
+desktop.ini

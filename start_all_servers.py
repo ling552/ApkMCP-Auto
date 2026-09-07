@@ -1,9 +1,16 @@
 # -*- coding: utf-8 -*-
 """
-MCP Server 启动脚本
-支持启动所有或指定服务器
+MCP Server 启动脚本（旧版 7 服务器分散模式，已弃用）
 
-功能：
+注意：新版推荐使用统一单服务器，一个连接即可调用全部工具：
+    python server.py                 # stdio 模式（MCP 客户端自动拉起）
+    python server.py --http          # HTTP 调试模式
+    start-server.bat http            # Windows 快捷方式
+    ./start-server.sh http           # macOS / Linux 快捷方式
+
+本文件仅为兼容旧版保留（python apkmcp.py config --legacy 可生成旧版配置）。
+
+旧版功能：
 - 批量启动 MCP 服务器
 - 支持指定服务器列表
 - 自动检测服务器状态

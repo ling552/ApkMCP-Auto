@@ -7,10 +7,11 @@
 3. 将 `[工作目录]` 替换为 APK 解码后的工作目录路径
 4. 根据需要选择特定的分析目标（广告去除/会员破解/加固分析）
 
-**MCP 工具配置说明：**
-- APKTool MCP Server 路径：`E:/A_java/java/apktool-mcp-server/apktool-mcp-server/apktool_mcp_server.py`
-- JADX MCP Server 路径：`E:/A_java/java/jadx-mcp-server/jadx-mcp-server/jadx_mcp_server.py`
-- 确保两个 MCP Server 已启动并连接
+**MCP 工具配置说明（统一单服务器）：**
+- 统一服务器：`server.py`，在 MCP 客户端中只有一条 `apkmcp` 记录
+- 用 `python apkmcp.py config --client all` 生成 Trae / Cursor / VS Code 等 9 种客户端配置
+- 下文 `apktool_*` 均为统一服务器中的分组工具，可直接调用
+- 如需 JADX 实时反编译（JADX-GUI 配合），加 `--with-jadx` 生成可选的第二服务器 `apkmcp-jadx`
 
 ---
 
@@ -25,36 +26,36 @@ APK 路径: [APK文件路径]
 请按照以下步骤进行分析，使用已配置的 MCP 工具：
 
 ### 第一步：APK 解码与基础信息提取
-使用 APKTool MCP Server 执行：
-1. 调用 `decode_apk` 解码 APK 文件到工作目录
-2. 调用 `get_manifest` 获取并分析 AndroidManifest.xml：
+使用统一服务器 apktool_* 分组工具 执行：
+1. 调用 `apktool_decode_apk` 解码 APK 文件到工作目录
+2. 调用 `apktool_get_manifest` 获取并分析 AndroidManifest.xml：
    - 包名、版本号、应用名称
    - 所有权限声明
    - 四大组件（Activity/Service/Receiver/Provider）清单
    - 是否存在加固或混淆特征
-3. 调用 `get_apktool_yml` 分析 APK 结构
-4. 调用 `analyze_project_structure` 获取项目整体分析
+3. 调用 `apktool_get_apktool_yml` 分析 APK 结构
+4. 调用 `apktool_analyze_project_structure` 获取项目整体分析
 
 ### 第二步：代码结构分析
-使用 APKTool MCP Server 执行：
-1. 调用 `list_smali_directories` 列出所有 Smali 目录
-2. 调用 `list_smali_files` 获取主包 Smali 文件列表（分页获取）
-3. 调用 `search_in_files` 搜索关键字符串：
+使用统一服务器 apktool_* 分组工具 执行：
+1. 调用 `apktool_list_smali_directories` 列出所有 Smali 目录
+2. 调用 `apktool_list_smali_files` 获取主包 Smali 文件列表（分页获取）
+3. 调用 `apktool_search_in_files` 搜索关键字符串：
    - 广告相关："ad"、"ads"、"advertisement"、"AdView"、"BannerAd"
    - 会员相关："vip"、"premium"、"member"、"pro"、"unlock"
    - 验证相关："signature"、"verify"、"check"、"license"
    - 加密相关："encrypt"、"decrypt"、"aes"、"rsa"
 
 ### 第三步：资源文件审查
-使用 APKTool MCP Server 执行：
-1. 调用 `list_resources` 列出所有资源类型
+使用统一服务器 apktool_* 分组工具 执行：
+1. 调用 `apktool_list_resources` 列出所有资源类型
 2. 检查 layout 资源中的广告视图
-3. 调用 `get_resource_file` 获取 strings.xml 分析关键文本
+3. 调用 `apktool_get_resource_file` 获取 strings.xml 分析关键文本
 4. 检查 drawable 资源中的广告图片
 
 ### 第四步：网络通信分析
-使用 APKTool MCP Server 执行：
-1. 调用 `search_in_files` 搜索网络相关代码：
+使用统一服务器 apktool_* 分组工具 执行：
+1. 调用 `apktool_search_in_files` 搜索网络相关代码：
    - "Retrofit"、"OkHttp"、"HttpURLConnection"
    - "api"、"endpoint"、"baseUrl"
    - "GET"、"POST"、"PUT"、"DELETE"
@@ -97,7 +98,7 @@ APK 路径: [APK文件路径]
 将完整分析报告保存为 Markdown 文件到工作目录：`[工作目录]/分析报告.md`
 
 ### 第六步：清理并关闭 MCP 工具
-1. 调用 `clean_project` 清理临时文件（可选）
+1. 调用 `apktool_clean_project` 清理临时文件（可选）
 2. **关闭 MCP 工具连接**
 
 ---
@@ -117,31 +118,31 @@ APK 路径: [APK文件路径]
 请使用 MCP 工具执行以下分析：
 
 #### 1. APK 解码与基础分析
-使用 APKTool MCP Server：
-- 调用 `decode_apk` 解码 APK
-- 调用 `get_manifest` 检查广告相关权限和组件
-- 调用 `analyze_project_structure` 获取项目概览
+使用统一服务器 apktool_* 分组工具：
+- 调用 `apktool_decode_apk` 解码 APK
+- 调用 `apktool_get_manifest` 检查广告相关权限和组件
+- 调用 `apktool_analyze_project_structure` 获取项目概览
 
 #### 2. 广告 SDK 识别
-使用 APKTool MCP Server：
-- 调用 `search_in_files` 搜索广告 SDK 特征：
+使用统一服务器 apktool_* 分组工具：
+- 调用 `apktool_search_in_files` 搜索广告 SDK 特征：
   - 包名关键词："com.google.android.gms.ads"、"com.facebook.ads"、"com.baidu.mobads"、"com.tencent.mm"
   - 类名关键词："AdView"、"BannerAd"、"InterstitialAd"、"RewardedAd"、"NativeAd"
   - 方法关键词："loadAd"、"showAd"、"requestAd"、"onAdLoaded"
 
 #### 3. 广告视图定位
-使用 APKTool MCP Server：
-- 调用 `list_resources` 列出 layout 资源
-- 调用 `get_resource_file` 获取可疑的 layout XML 文件
+使用统一服务器 apktool_* 分组工具：
+- 调用 `apktool_list_resources` 列出 layout 资源
+- 调用 `apktool_get_resource_file` 获取可疑的 layout XML 文件
 - 搜索广告容器："ad_container"、"ad_view"、"banner_container"
 
 #### 4. 广告加载逻辑分析
-使用 APKTool MCP Server：
-- 调用 `search_in_files` 在 .smali 文件中搜索：
+使用统一服务器 apktool_* 分组工具：
+- 调用 `apktool_search_in_files` 在 .smali 文件中搜索：
   - "loadAd"、"showAd"、"requestAd"
   - "onAdLoaded"、"onAdFailedToLoad"
   - "AdListener"、"AdCallback"
-- 调用 `get_smali_file` 获取关键广告类的 Smali 代码
+- 调用 `apktool_get_smali_file` 获取关键广告类的 Smali 代码
 
 #### 5. 生成广告分析报告并保存
 基于 MCP 工具分析结果，生成完整的广告分析报告：
@@ -184,7 +185,7 @@ APK 路径: [APK文件路径]
 将报告保存为：`[工作目录]/广告分析报告.md`
 
 #### 6. 清理并关闭 MCP 工具
-1. 调用 `clean_project` 清理临时文件（可选）
+1. 调用 `apktool_clean_project` 清理临时文件（可选）
 2. **关闭 MCP 工具连接**
 ```
 
@@ -201,13 +202,13 @@ APK 路径: [APK文件路径]
 请使用 MCP 工具执行以下分析：
 
 #### 1. APK 解码
-使用 APKTool MCP Server：
-- 调用 `decode_apk` 解码 APK
-- 调用 `get_manifest` 获取应用基本信息
+使用统一服务器 apktool_* 分组工具：
+- 调用 `apktool_decode_apk` 解码 APK
+- 调用 `apktool_get_manifest` 获取应用基本信息
 
 #### 2. 会员相关代码定位
-使用 APKTool MCP Server：
-- 调用 `search_in_files` 搜索会员相关关键词：
+使用统一服务器 apktool_* 分组工具：
+- 调用 `apktool_search_in_files` 搜索会员相关关键词：
   - "isVip"、"isPremium"、"isPro"、"isMember"、"isUnlock"
   - "getVipStatus"、"checkVip"、"verifyLicense"
   - "vip_expire"、"member_valid"、"subscription"
@@ -215,27 +216,27 @@ APK 路径: [APK文件路径]
 - 记录所有匹配的文件和方法
 
 #### 3. 用户状态存储分析
-使用 APKTool MCP Server：
-- 调用 `search_in_files` 搜索本地存储：
+使用统一服务器 apktool_* 分组工具：
+- 调用 `apktool_search_in_files` 搜索本地存储：
   - "SharedPreferences"、"getSharedPreferences"
   - "SQLiteDatabase"、"Room"
   - "vip"、"premium"、"member"（在存储相关代码中）
-- 调用 `get_smali_file` 获取关键存储类的代码
+- 调用 `apktool_get_smali_file` 获取关键存储类的代码
 
 #### 4. 服务器验证逻辑
-使用 APKTool MCP Server：
-- 调用 `search_in_files` 搜索网络请求：
+使用统一服务器 apktool_* 分组工具：
+- 调用 `apktool_search_in_files` 搜索网络请求：
   - "user/info"、"member/info"、"vip/status"
   - "login"、"auth"、"token"
 - 分析会员状态同步机制
 
 #### 5. 功能限制检查点
-使用 APKTool MCP Server：
-- 调用 `search_in_files` 搜索功能限制逻辑：
+使用统一服务器 apktool_* 分组工具：
+- 调用 `apktool_search_in_files` 搜索功能限制逻辑：
   - "if.*isVip"、"if.*isPro"
   - "canUse"、"isAvailable"
   - "limit"、"restrict"
-- 调用 `get_smali_file` 获取关键验证类的 Smali 代码
+- 调用 `apktool_get_smali_file` 获取关键验证类的 Smali 代码
 
 #### 6. 生成会员分析报告并保存
 基于 MCP 工具分析结果，生成完整的会员机制分析报告：
@@ -284,7 +285,7 @@ APK 路径: [APK文件路径]
 ⚠️ 注意：本分析仅供学习研究使用，请遵守相关法律法规。
 
 #### 7. 清理并关闭 MCP 工具
-1. 调用 `clean_project` 清理临时文件（可选）
+1. 调用 `apktool_clean_project` 清理临时文件（可选）
 2. **关闭 MCP 工具连接**
 ```
 
@@ -301,15 +302,15 @@ APK 路径: [APK文件路径]
 请使用 MCP 工具执行以下分析：
 
 #### 1. APK 解码与初步检查
-使用 APKTool MCP Server：
-- 调用 `decode_apk` 尝试解码 APK
-- 调用 `get_manifest` 检查入口点和组件
-- 调用 `analyze_project_structure` 分析项目结构
+使用统一服务器 apktool_* 分组工具：
+- 调用 `apktool_decode_apk` 尝试解码 APK
+- 调用 `apktool_get_manifest` 检查入口点和组件
+- 调用 `apktool_analyze_project_structure` 分析项目结构
 
 #### 2. 加固特征识别
-使用 APKTool MCP Server：
-- 调用 `list_smali_directories` 检查 Smali 目录数量
-- 调用 `search_in_files` 在 lib 目录搜索加固特征：
+使用统一服务器 apktool_* 分组工具：
+- 调用 `apktool_list_smali_directories` 检查 Smali 目录数量
+- 调用 `apktool_search_in_files` 在 lib 目录搜索加固特征：
   - 360加固："libjiagu"、"libprotectClass"
   - 梆梆加固："libsecexe"、"libsecmain"、"libSecShell"
   - 爱加密："libijiami"、"libexec"
@@ -320,17 +321,17 @@ APK 路径: [APK文件路径]
   - 其他："libegis"、"libedog"、"libchaosvmp"、"libx3g"
 
 #### 3. 壳类型判断
-使用 APKTool MCP Server：
-- 检查 classes.dex 大小（调用 `analyze_project_structure`）
-- 调用 `get_manifest` 分析入口 Activity
-- 调用 `search_in_files` 搜索动态加载代码：
+使用统一服务器 apktool_* 分组工具：
+- 检查 classes.dex 大小（调用 `apktool_analyze_project_structure`）
+- 调用 `apktool_get_manifest` 分析入口 Activity
+- 调用 `apktool_search_in_files` 搜索动态加载代码：
   - "DexClassLoader"、"PathClassLoader"
   - "loadDex"、"loadClass"
   - "attachBaseContext"
 
 #### 4. 反调试/反篡改检测
-使用 APKTool MCP Server：
-- 调用 `search_in_files` 搜索反调试特征：
+使用统一服务器 apktool_* 分组工具：
+- 调用 `apktool_search_in_files` 搜索反调试特征：
   - "/proc/self/status"、"TracerPid"
   - "ptrace"、"PTRACE_TRACEME"
   - "isDebuggerConnected"
@@ -378,7 +379,7 @@ APK 路径: [APK文件路径]
 将报告保存为：`[工作目录]/加固分析报告.md`
 
 #### 6. 清理并关闭 MCP 工具
-1. 调用 `clean_project` 清理临时文件（可选）
+1. 调用 `apktool_clean_project` 清理临时文件（可选）
 2. **关闭 MCP 工具连接**
 ```
 
@@ -395,46 +396,46 @@ APK 路径: [APK文件路径]
 请使用 MCP 工具执行以下分析：
 
 #### 1. APK 解码
-使用 APKTool MCP Server：
-- 调用 `decode_apk` 解码 APK
-- 调用 `get_manifest` 获取应用信息
+使用统一服务器 apktool_* 分组工具：
+- 调用 `apktool_decode_apk` 解码 APK
+- 调用 `apktool_get_manifest` 获取应用信息
 
 #### 2. 网络库识别
-使用 APKTool MCP Server：
-- 调用 `search_in_files` 识别网络库：
+使用统一服务器 apktool_* 分组工具：
+- 调用 `apktool_search_in_files` 识别网络库：
   - "OkHttpClient"、"OkHttp"
   - "Retrofit"、"Retrofit.Builder"
   - "Volley"、"RequestQueue"
   - "HttpURLConnection"
   - "addInterceptor"、"Interceptor"
-- 调用 `get_smali_file` 获取网络客户端初始化类的代码
+- 调用 `apktool_get_smali_file` 获取网络客户端初始化类的代码
 
 #### 3. API 接口收集
-使用 APKTool MCP Server：
-- 调用 `search_in_files` 搜索 API 定义：
+使用统一服务器 apktool_* 分组工具：
+- 调用 `apktool_search_in_files` 搜索 API 定义：
   - "baseUrl"、"BASE_URL"
   - "@GET"、"@POST"、"@PUT"、"@DELETE"
   - "https://"、"http://"
-- 调用 `list_smali_files` 定位 API 接口定义类
-- 调用 `get_smali_file` 获取关键 API 接口类的代码
+- 调用 `apktool_list_smali_files` 定位 API 接口定义类
+- 调用 `apktool_get_smali_file` 获取关键 API 接口类的代码
 
 #### 4. 关键请求定位
-使用 APKTool MCP Server：
-- 调用 `search_in_files` 搜索关键请求：
+使用统一服务器 apktool_* 分组工具：
+- 调用 `apktool_search_in_files` 搜索关键请求：
   - 登录："login"、"signin"、"auth"
   - 会员："vip"、"member"、"premium"
   - 广告："ad"、"ads"、"advertisement"
   - 统计："stat"、"analytics"、"track"
 
 #### 5. 加密/签名机制
-使用 APKTool MCP Server：
-- 调用 `search_in_files` 搜索加密签名代码：
+使用统一服务器 apktool_* 分组工具：
+- 调用 `apktool_search_in_files` 搜索加密签名代码：
   - "MD5"、"SHA1"、"SHA256"
   - "sign"、"signature"、"hmac"
   - "encrypt"、"decrypt"
   - "timestamp"、"nonce"
   - "CertificatePinner"、"SSL"
-- 调用 `get_smali_file` 获取加密工具类的代码
+- 调用 `apktool_get_smali_file` 获取加密工具类的代码
 
 #### 6. 生成网络分析报告并保存
 基于 MCP 工具分析结果，生成完整的网络通信分析报告：
@@ -477,7 +478,7 @@ APK 路径: [APK文件路径]
 将报告保存为：`[工作目录]/网络分析报告.md`
 
 #### 7. 清理并关闭 MCP 工具
-1. 调用 `clean_project` 清理临时文件（可选）
+1. 调用 `apktool_clean_project` 清理临时文件（可选）
 2. **关闭 MCP 工具连接**
 ```
 
@@ -494,33 +495,33 @@ APK 路径: [APK文件路径]
 请使用已配置的 MCP 工具按以下流程执行：
 
 ### Phase 1: 环境准备与 APK 解码
-使用 APKTool MCP Server：
-1. 调用 `health_check` 确认服务状态
-2. 调用 `decode_apk` 解码 APK 到工作目录
-3. 调用 `analyze_project_structure` 获取项目整体分析
-4. 调用 `get_workspace_info` 确认工作空间状态
+使用统一服务器 apktool_* 分组工具：
+1. 调用 `apktool_health_check` 确认服务状态
+2. 调用 `apktool_decode_apk` 解码 APK 到工作目录
+3. 调用 `apktool_analyze_project_structure` 获取项目整体分析
+4. 调用 `apktool_get_workspace_info` 确认工作空间状态
 
 ### Phase 2: 基础信息提取
-使用 APKTool MCP Server：
-1. 调用 `get_manifest` 分析 AndroidManifest.xml
-2. 调用 `get_apktool_yml` 了解 APK 元数据
-3. 调用 `list_smali_directories` 获取代码结构
-4. 调用 `list_resources` 获取资源概览
+使用统一服务器 apktool_* 分组工具：
+1. 调用 `apktool_get_manifest` 分析 AndroidManifest.xml
+2. 调用 `apktool_get_apktool_yml` 了解 APK 元数据
+3. 调用 `apktool_list_smali_directories` 获取代码结构
+4. 调用 `apktool_list_resources` 获取资源概览
 
 ### Phase 3: 目标代码定位
-使用 APKTool MCP Server：
-1. 根据目标调用 `search_in_files` 搜索关键词：
+使用统一服务器 apktool_* 分组工具：
+1. 根据目标调用 `apktool_search_in_files` 搜索关键词：
    - 广告去除："ad"、"AdView"、"loadAd"、"showAd"
    - 会员破解："isVip"、"isPro"、"checkVip"、"verify"
    - 功能解锁："isUnlock"、"canUse"、"limit"
    - 加固分析："libjiagu"、"libshell"、"DexClassLoader"
-2. 调用 `list_smali_files` 获取主包代码列表
-3. 调用 `get_smali_file` 获取关键类的 Smali 代码
+2. 调用 `apktool_list_smali_files` 获取主包代码列表
+3. 调用 `apktool_get_smali_file` 获取关键类的 Smali 代码
 
 ### Phase 4: 深度分析
-使用 APKTool MCP Server：
-1. 调用 `search_in_files` 搜索相关代码模式
-2. 调用 `get_resource_file` 检查相关资源
+使用统一服务器 apktool_* 分组工具：
+1. 调用 `apktool_search_in_files` 搜索相关代码模式
+2. 调用 `apktool_get_resource_file` 检查相关资源
 3. 分析代码逻辑和调用链
 
 ### Phase 5: 生成综合报告并保存
@@ -560,7 +561,7 @@ APK 路径: [APK文件路径]
 将报告保存为：`[工作目录]/逆向分析报告.md`
 
 ### Phase 6: 清理并关闭 MCP 工具
-1. 调用 `clean_project` 清理临时文件（可选）
+1. 调用 `apktool_clean_project` 清理临时文件（可选）
 2. **关闭 MCP 工具连接**
 
 ⚠️ 注意：本分析仅供学习研究使用，请遵守相关法律法规，仅分析拥有合法权限的应用。
@@ -581,17 +582,17 @@ APK 路径: E:/A_java/samples/video_app.apk
 请使用已配置的 MCP 工具按以下流程执行：
 
 ### Phase 1: 环境准备与 APK 解码
-使用 APKTool MCP Server：
-1. 调用 `health_check` 确认服务状态
-2. 调用 `decode_apk` 解码 APK 到工作目录
-3. 调用 `analyze_project_structure` 获取项目整体分析
-4. 调用 `get_workspace_info` 确认工作空间状态
+使用统一服务器 apktool_* 分组工具：
+1. 调用 `apktool_health_check` 确认服务状态
+2. 调用 `apktool_decode_apk` 解码 APK 到工作目录
+3. 调用 `apktool_analyze_project_structure` 获取项目整体分析
+4. 调用 `apktool_get_workspace_info` 确认工作空间状态
 
 ### Phase 2: 基础信息提取
 ...
 
 ### Phase 6: 清理并关闭 MCP 工具
-1. 调用 `clean_project` 清理临时文件（可选）
+1. 调用 `apktool_clean_project` 清理临时文件（可选）
 2. **关闭 MCP 工具连接**
 ```
 
@@ -611,7 +612,7 @@ APK 路径: E:/A_java/samples/tool_app.apk
 ...
 
 ### Phase 6: 清理并关闭 MCP 工具
-1. 调用 `clean_project` 清理临时文件（可选）
+1. 调用 `apktool_clean_project` 清理临时文件（可选）
 2. **关闭 MCP 工具连接**
 ```
 
@@ -619,28 +620,28 @@ APK 路径: E:/A_java/samples/tool_app.apk
 
 ## MCP 工具快速参考
 
-### APKTool MCP Server 可用工具
+### 统一服务器 APKTool 分组可用工具（带 `apktool_` 前缀）
 
 | 工具名 | 用途 |
 |--------|------|
-| `health_check` | 检查服务状态 |
-| `decode_apk` | 解码 APK 文件 |
-| `build_apk` | 构建 APK 文件 |
-| `get_manifest` | 获取 AndroidManifest.xml |
-| `get_apktool_yml` | 获取 apktool.yml |
-| `list_smali_directories` | 列出 Smali 目录 |
-| `list_smali_files` | 列出 Smali 文件（支持分页） |
-| `get_smali_file` | 获取 Smali 文件内容 |
-| `modify_smali_file` | 修改 Smali 文件 |
-| `list_resources` | 列出资源文件 |
-| `get_resource_file` | 获取资源文件内容 |
-| `modify_resource_file` | 修改资源文件 |
-| `search_in_files` | 在文件中搜索 |
-| `analyze_project_structure` | 分析项目结构 |
-| `clean_project` | 清理项目 |
-| `get_workspace_info` | 获取工作空间信息 |
+| `apktool_health_check` | 检查服务状态 |
+| `apktool_decode_apk` | 解码 APK 文件 |
+| `apktool_build_apk` | 构建 APK 文件 |
+| `apktool_get_manifest` | 获取 AndroidManifest.xml |
+| `apktool_get_apktool_yml` | 获取 apktool.yml |
+| `apktool_list_smali_directories` | 列出 Smali 目录 |
+| `apktool_list_smali_files` | 列出 Smali 文件（支持分页） |
+| `apktool_get_smali_file` | 获取 Smali 文件内容 |
+| `apktool_modify_smali_file` | 修改 Smali 文件 |
+| `apktool_list_resources` | 列出资源文件 |
+| `apktool_get_resource_file` | 获取资源文件内容 |
+| `apktool_modify_resource_file` | 修改资源文件 |
+| `apktool_search_in_files` | 在文件中搜索 |
+| `apktool_analyze_project_structure` | 分析项目结构 |
+| `apktool_clean_project` | 清理项目 |
+| `apktool_get_workspace_info` | 获取工作空间信息 |
 
-### JADX MCP Server 可用工具（需要配合 JADX-GUI）
+### JADX 可选服务器可用工具（需 `--with-jadx` 启用 `apkmcp-jadx`，配合 JADX-GUI）
 
 | 工具名 | 用途 |
 |--------|------|
@@ -654,7 +655,7 @@ APK 路径: E:/A_java/samples/tool_app.apk
 | `get_smali_of_class` | 获取类的 Smali 代码 |
 | `get_android_manifest` | 获取 AndroidManifest.xml |
 | `get_strings` | 获取字符串资源 |
-| `get_resource_file` | 获取资源文件内容 |
+| `apktool_get_resource_file` | 获取资源文件内容 |
 | `rename_class` | 重命名类 |
 | `rename_method` | 重命名方法 |
 | `rename_field` | 重命名字段 |
@@ -679,9 +680,9 @@ APK 路径: E:/A_java/samples/tool_app.apk
 
 | 用途 | 工具 | 路径/说明 |
 |------|------|-----------|
-| APK 解码/编码 | APKTool MCP Server | `java/apktool-mcp-server/` |
-| Java 代码分析 | JADX MCP Server | `java/jadx-mcp-server/` |
-| 图形化反编译 | JADX-GUI | `java/jadx-gui/jadx-gui-1.5.5.exe` |
+| APK 解码/编码 | 统一服务器 apktool_* | `server.py`（单服务器） |
+| Java 代码分析 | 统一服务器 static_* + 可选 apkmcp-jadx | `static_full_analysis` / JADX-GUI |
+| 图形化反编译 | JADX-GUI | `tools/bin/jadx-gui.exe` |
 | Smali 编辑 | VS Code + Smali 插件 | 推荐编辑器 |
 | 动态调试 | Android Studio、Frida | 配合真机/模拟器 |
 | 抓包分析 | Charles Proxy、Burp Suite | 网络请求拦截 |

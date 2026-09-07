@@ -1,0 +1,30 @@
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  smoke:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install core dependencies
+        run: pip install -r requirements.txt
+
+      - name: Compile check
+        run: python -m py_compile server.py apkmcp.py tools/adb/server.py tools/apktool/server.py tools/diff/server.py tools/sign-tools/server.py tools/static-analyzer/server.py
+
+      - name: Unified server tool catalog
+        run: python server.py --disable frida --list-tools
+
+      - name: Config generation check
+        run: python apkmcp.py config --client generic -p
